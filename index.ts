@@ -32,8 +32,6 @@ let letters: State[] = alphabet.map(letter => ({
 
 let FOR_SURE = ['','','','',''];
 
-let guessedWords: string[] = [];
-
 const arraysEqual = (a: any[], b: any[]) => {
     if (a === b) return true;
     if (a == null || b == null) return false;
@@ -59,10 +57,6 @@ const generateGuess = async (currentState: State[]): Promise<string> => {
 
     const wordList = await getWordList();
     const filteredWordList = wordList.filter(word => {
-        if (guessedWords.includes(word)) {
-            return false;
-        }
-
         const wordLetters = word.split('');
 
         const goodLettersInWord = [...new Set(wordLetters.filter(letter => goodLetters.includes(letter)))];
@@ -114,8 +108,6 @@ const generateGuess = async (currentState: State[]): Promise<string> => {
 }
 
 const submitResults = (guess: string, results: string) => {
-    guessedWords.push(guess)
-
     for (let i = 0; i < guess.length; i++) {
         const letter = guess[i];
         const result = results[i];
