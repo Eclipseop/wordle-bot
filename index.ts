@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 const fsPromises = fs.promises;
 import * as readLine from 'readline';
+import { filterOnlyAbsolutePosition, filterOnlyWordsWithGuaranteedLetters, filterOutBadLetters, filterOutGuessedWords, filterOutWrongPositionLetters } from './filter';
 
 const rl = readLine.createInterface({
     input: process.stdin,
@@ -14,7 +15,7 @@ const getWordList = async (): Promise<string[]> => {
     return words;
 }
 
-type State = {
+export type State = {
     letter: string,
     checked: boolean,
     contains: boolean,
@@ -32,18 +33,7 @@ let letters: State[] = alphabet.map(letter => ({
 
 let FOR_SURE = ['','','','',''];
 
-const arraysEqual = (a: any[], b: any[]) => {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length != b.length) return false;
-    a.sort();
-    b.sort();
-
-    for (let i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
-}
+const gussedWords: string[] = [];
 
 const generateGuess = async (currentState: State[]): Promise<string> => {
     const availableLetters: string[] = currentState.filter(state => !state.checked || state.contains).map(state => state.letter);
@@ -52,62 +42,20 @@ const generateGuess = async (currentState: State[]): Promise<string> => {
         return 'beast';
     }
 
-    const goodLetters: string[] = currentState.filter(state => state.contains).map(state => state.letter);
-    console.log(`Good letters: ${goodLetters}`);
-
     const wordList = await getWordList();
-    const filteredWordList = wordList.filter(word => {
-        const wordLetters = word.split('');
 
-        const goodLettersInWord = [...new Set(wordLetters.filter(letter => goodLetters.includes(letter)))];
-        for (let letter of wordLetters) {
-            if (!availableLetters.includes(letter)) {
-                return false;
-            }
-            
-        }
-        return arraysEqual(goodLettersInWord, goodLetters);
-    });
+    const step1 = filterOutBadLetters(wordList, currentState);
+    const step2 = filterOnlyWordsWithGuaranteedLetters(step1, currentState);
+    const step3 = filterOutGuessedWords(step2, gussedWords);
+    const step4 = filterOnlyAbsolutePosition(step3, FOR_SURE);
+    const step5 = filterOutWrongPositionLetters(step4, currentState, FOR_SURE);
 
-    console.log(`[1/3] Filtered out ${100 - Math.round((filteredWordList.length / wordList.length) * 100)}% of words. ${filteredWordList.length} possible words left.`);
-
-    const filetedWordList2 = filteredWordList.filter(word => {
-        for (let i = 0; i < word.length; i++) {
-            const gLetter = FOR_SURE[i];
-            const guessLetter = word[i];
-
-            if (gLetter === '') continue;
-
-            if (gLetter !== guessLetter) {
-                return false;
-            }
-        }
-        return true;
-    });
-    console.log(`[2/3] Filtered out ${100 - Math.round((filetedWordList2.length / wordList.length) * 100)}% of words. ${filetedWordList2.length} possible words left.`);
-
-    const wrongPositionLetters = currentState.filter(state => state.checkedPosition && state.checkedPosition.length > 0);
-
-    const filteredWordList3 = filetedWordList2.filter(word => {
-        for (let i = 0; i < word.length; i++) {
-            const guessLetter = word[i];
-
-            if (FOR_SURE[i] === guessLetter) continue;
-
-            const previousChecks = wrongPositionLetters.find(state => state.checkedPosition && state.letter === guessLetter);
-
-            if (previousChecks && previousChecks.checkedPosition && previousChecks.checkedPosition.includes(i)) {
-                return false;
-            }
-        }
-        return true;
-    });
-    console.log(`[3/3] Filtered out ${100 - Math.round((filteredWordList3.length / wordList.length) * 100)}% of wordss. ${filteredWordList3.length} possible words left.`);
-
-     return filteredWordList3[0];
+    return step5[0];
 }
 
 const submitResults = (guess: string, results: string) => {
+    gussedWords.push(guess);
+    
     for (let i = 0; i < guess.length; i++) {
         const letter = guess[i];
         const result = results[i];
