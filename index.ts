@@ -33,14 +33,12 @@ const FOR_SURE = ['','','','',''];
 
 const gussedWords: string[] = [];
 
-const generateGuess = async (currentState: State[]): Promise<string> => {
+const generateGuess = (currentState: State[], wordList: string[]): string => {
   const availableLetters: string[] = currentState.filter(state => !state.checked || state.contains).map(state => state.letter);
 
   if (availableLetters.length === 26) {
     return 'beast';
   }
-
-  const wordList = await getWordList();
 
   const step1 = filterOutBadLetters(wordList, currentState);
   const step2 = filterOnlyWordsWithGuaranteedLetters(step1, currentState);
@@ -73,13 +71,17 @@ const submitResults = (guess: string, results: string) => {
 };
 
 const main = async () => {
+  const wordList = await getWordList();
+
   for (let i = 0; i < 6; i++) {
-    const guess = await generateGuess(letters);
+    const guess = generateGuess(letters, wordList);
     console.log(`Guess: ${guess}`);
+
     const results: string = await new Promise(res => {
       rl.question('What were the results? (y/m/n) ', res);
     });
     submitResults(guess, results);
+    
     if (results === 'yyyyy') {
       console.log('nice :)');
       break;
