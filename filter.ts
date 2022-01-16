@@ -1,6 +1,6 @@
 import { State } from '.';
 
-const arraysEqual = (a: any[], b: any[]) => {
+const arraysEqual = (a: unknown[], b: unknown[]) => {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (a.length != b.length) return false;

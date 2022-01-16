@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "tsc && node dist/index.js"
+    "start": "tsc && node dist/index.js",
+    "lint": "yarn eslint . --ext .ts"
   },
   "devDependencies": {
     "@types/node": "^17.0.8",
