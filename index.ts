@@ -34,9 +34,7 @@ const FOR_SURE = ['','','','',''];
 const gussedWords: string[] = [];
 
 const generateGuess = (currentState: State[], wordList: string[]): string => {
-  const availableLetters: string[] = currentState.filter(state => !state.checked || state.contains).map(state => state.letter);
-
-  if (availableLetters.length === 26) {
+  if (gussedWords.length === 0) {
     return 'beast';
   }
 
@@ -81,7 +79,7 @@ const main = async () => {
       rl.question('What were the results? (y/m/n) ', res);
     });
     submitResults(guess, results);
-    
+
     if (results === 'yyyyy') {
       console.log('nice :)');
       break;
